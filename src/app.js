@@ -42,18 +42,6 @@ app.use(
   })
 );
 
-// Session
-// const sessionConfig = {
-//   secret: process.env.SESSION_SECRET || "fallback-dev-secret",
-//   resave: false,
-//   saveUninitialized: false,
-//   cookie: {
-//     secure: process.env.NODE_ENV === "production",
-//     httpOnly: true,
-//     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-//   },
-// };
-
 if (!process.env.SESSION_SECRET) {
   console.error("SESSION_SECRET environment variable is required!");
   process.exit(1);
@@ -64,9 +52,9 @@ const sessionConfig = {
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === "production",
+    secure: false,
     httpOnly: true,
-    sameSite: "strict", // ← Add
+    sameSite: "lax",
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
 };
