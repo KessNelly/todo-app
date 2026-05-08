@@ -20,9 +20,7 @@ const getTasks = async (req, res, next) => {
     const counts = await Task.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId.createFromHexString(
-            userId.toString()
-          ),
+          user: mongoose.Types.ObjectId.createFromHexString(userId.toString()),
         },
       },
       { $group: { _id: "$status", count: { $sum: 1 } } },
