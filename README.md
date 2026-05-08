@@ -1,6 +1,6 @@
 # ✦ Taskly — Todo Application
 
-A full-stack Todo application built with Node.js, Express, EJS, and MongoDB. Users can sign up, log in, create tasks, and track their status (pending/completed/deleted).
+A full-stack Todo application built with Node.js, Express, EJS, and MongoDB. Users can sign up, log in, create tasks, and track their status (all/pending/completed).
 
 ---
 
