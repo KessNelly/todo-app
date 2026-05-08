@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
 const Task = require("../models/Task");
 const { TASK_STATUSES } = require("../models/Task");
@@ -16,12 +17,14 @@ const getTasks = async (req, res, next) => {
 
     const tasks = await Task.find(query).sort({ createdAt: -1 });
 
-    // const counts = await Task.aggregate([
-    //   { $match: { user: require('mongoose').Types.ObjectId.createFromHexString(userId.toString()) } },
-    //   { $group: { _id: '$status', count: { $sum: 1 } } },
-    // ]);
     const counts = await Task.aggregate([
-      { $match: { user: new mongoose.Types.ObjectId(userId) } },
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId.createFromHexString(
+            userId.toString()
+          ),
+        },
+      },
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
