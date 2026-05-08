@@ -1,0 +1,113 @@
+<div class="tasks-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">My Tasks</h1>
+      <p class="page-subtitle">
+        <span class="count-badge pending"><%= taskCounts.pending %> pending</span>
+        <span class="count-badge completed"><%= taskCounts.completed %> completed</span>
+      </p>
+    </div>
+    <button class="btn btn-primary" onclick="toggleForm()">+ New Task</button>
+  </div>
+
+  <!-- Create Task Form -->
+  <div class="create-form-wrapper" id="createForm" style="display:none">
+    <form action="/tasks" method="POST" class="create-form">
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="title">Task</label>
+          <input type="text" id="title" name="title" placeholder="What needs to be done?" required autofocus maxlength="200">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="description">Description <span class="optional">(optional)</span></label>
+        <textarea id="description" name="description" placeholder="Add more details..." maxlength="1000" rows="2"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Add Task</button>
+        <button type="button" class="btn btn-ghost" onclick="toggleForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <a href="/tasks?filter=all" class="tab <%= filter === 'all' ? 'active' : '' %>">All</a>
+    <a href="/tasks?filter=pending" class="tab <%= filter === 'pending' ? 'active' : '' %>">Pending</a>
+    <a href="/tasks?filter=completed" class="tab <%= filter === 'completed' ? 'active' : '' %>">Completed</a>
+  </div>
+
+  <!-- Task List -->
+  <div class="task-list">
+    <% if (tasks.length === 0) { %>
+      <div class="empty-state">
+        <div class="empty-icon">
+          <% if (filter === 'completed') { %>☐<% } else { %>✦<% } %>
+        </div>
+        <p class="empty-title">
+          <% if (filter === 'pending') { %>No pending tasks — you're all caught up!</% } else if (filter === 'completed') { %>No completed tasks yet.<% } else { %>No tasks yet. Create your first one!<% } %>
+        </p>
+      </div>
+    <% } else { %>
+      <% tasks.forEach(task => { %>
+        <div class="task-card <%= task.status %>">
+          <div class="task-main">
+            <div class="task-checkbox">
+              <% if (task.status === 'pending') { %>
+                <form action="/tasks/<%= task._id %>/status" method="POST">
+                  <input type="hidden" name="status" value="completed">
+                  <button type="submit" class="check-btn" title="Mark as complete">○</button>
+                </form>
+              <% } else if (task.status === 'completed') { %>
+                <form action="/tasks/<%= task._id %>/status" method="POST">
+                  <input type="hidden" name="status" value="pending">
+                  <button type="submit" class="check-btn check-btn--done" title="Mark as pending">✓</button>
+                </form>
+              <% } %>
+            </div>
+
+            <div class="task-body">
+              <span class="task-title <%= task.status === 'completed' ? 'strikethrough' : '' %>">
+                <%= task.title %>
+              </span>
+              <% if (task.description) { %>
+                <p class="task-desc"><%= task.description %></p>
+              <% } %>
+              <div class="task-meta">
+                <span class="task-date">
+                  <%= new Date(task.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+                </span>
+                <% if (task.status === 'completed' && task.completedAt) { %>
+                  <span class="task-completed-at">
+                    · Completed <%= new Date(task.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+                  </span>
+                <% } %>
+                <span class="status-pill status-<%= task.status %>"><%= task.status %></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="task-actions">
+            <form action="/tasks/<%= task._id %>/delete" method="POST" onsubmit="return confirm('Remove this task?')">
+              <button type="submit" class="btn-icon" title="Delete task">✕</button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+</div>
+
+<script>
+function toggleForm() {
+  const form = document.getElementById('createForm');
+  const isHidden = form.style.display === 'none';
+  form.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) {
+    setTimeout(() => document.getElementById('title').focus(), 50);
+  }
+}
+
+// Auto-show form if there was a validation error
+<% if (locals.showForm) { %>toggleForm();<% } %>
+</script>

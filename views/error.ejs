@@ -1,0 +1,6 @@
+<div class="error-page">
+  <div class="error-code"><%= statusCode %></div>
+  <h1 class="error-title"><%= statusCode === 404 ? 'Page not found' : 'Something went wrong' %></h1>
+  <p class="error-msg"><%= message %></p>
+  <a href="/" class="btn btn-primary">Go Home</a>
+</div>

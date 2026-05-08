@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: todo-app
+    env: node
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # Set this in Render dashboard
+      - key: SESSION_SECRET
+        generateValue: true

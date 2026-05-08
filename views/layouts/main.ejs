@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — Taskly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <%- style %>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="/tasks" class="logo">✦ Taskly</a>
+      <div class="nav-right">
+        <span class="nav-user">@<%= currentUser %></span>
+        <form action="/auth/logout" method="POST" style="display:inline">
+          <button type="submit" class="btn btn-ghost btn-sm">Sign out</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <% if (success && success.length > 0) { %>
+      <div class="alert alert-success"><span>✓</span> <%= success[0] %></div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+      <div class="alert alert-error"><span>✕</span> <%= error[0] %></div>
+    <% } %>
+
+    <%- body %>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <%- script %>
+</body>
+</html>
