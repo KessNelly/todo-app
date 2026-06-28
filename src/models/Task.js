@@ -4,6 +4,7 @@ const TASK_STATUSES = {
   PENDING: 'pending',
   COMPLETED: 'completed',
   DELETED: 'deleted',
+  OVERDUE: 'overdue',  
 };
 
 const taskSchema = new mongoose.Schema(
@@ -21,11 +22,15 @@ const taskSchema = new mongoose.Schema(
       maxlength: [1000, 'Description cannot exceed 1000 characters'],
       default: '',
     },
+    dueDate: {
+      type: Date,
+      required: false,                   
+    },
     status: {
       type: String,
       enum: {
         values: Object.values(TASK_STATUSES),
-        message: 'Status must be pending, completed, or deleted',
+        message: 'Status must be pending, completed, deleted, or overdue',
       },
       default: TASK_STATUSES.PENDING,
     },
@@ -47,11 +52,18 @@ const taskSchema = new mongoose.Schema(
 
 // Index for efficient user+status queries
 taskSchema.index({ user: 1, status: 1 });
+taskSchema.index({ user: 1, dueDate: 1 });
 taskSchema.index({ user: 1, createdAt: -1 });
 
 // Auto-set completedAt when status changes to completed
 taskSchema.pre('save', function (next) {
-  if (this.isModified('status')) {
+  if (this.isModified('status') || this.isModified('dueDate')) {
+    const now = new Date();
+
+    if (this.dueDate && this.dueDate < now && this.status === TASK_STATUSES.PENDING) {
+      this.status = TASK_STATUSES.OVERDUE;
+    }
+
     if (this.status === TASK_STATUSES.COMPLETED && !this.completedAt) {
       this.completedAt = new Date();
     } else if (this.status !== TASK_STATUSES.COMPLETED) {
