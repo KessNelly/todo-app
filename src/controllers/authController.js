@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const logger = require("../utils/logger");
+const { generateToken } = require('../utils/jwt');
 
 // GET /auth/signup
 const getSignup = (req, res) => {
@@ -25,7 +26,7 @@ const postSignup = async (req, res, next) => {
       });
     }
 
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
 
     const existingUser = await User.findOne({
       username: username.toLowerCase(),
@@ -41,6 +42,7 @@ const postSignup = async (req, res, next) => {
 
     const user = await User.create({
       username: username.toLowerCase(),
+      email: email.toLowerCase(),
       password,
     });
     req.session.userId = user._id;
@@ -74,66 +76,41 @@ const postLogin = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).render("auth/login", {
-        title: "Sign In",
+      return res.status(400).render('auth/login', {
+        title: 'Sign In',
         errors: errors.array(),
         formData: { username: req.body.username },
-        layout: "layouts/auth",
+        layout: 'layouts/auth',
       });
     }
 
     const { username, password } = req.body;
-
-    console.log(`[LOGIN ATTEMPT] Username: ${username} | IP: ${req.ip}`);
-
     const user = await User.findOne({ username: username.toLowerCase() });
 
-    if (!user) {
-      console.log(`[LOGIN FAILED] User not found: ${username}`);
-      logger.warn(
-        `Failed login attempt | username=${username} | reason=user_not_found`
-      );
-      return res.status(401).render("auth/login", {
-        title: "Sign In",
-        errors: [{ msg: "Invalid username or password." }],
+    if (!user || !(await user.comparePassword(password))) {
+      logger.warn(`Failed login attempt | username=${username}`);
+      return res.status(401).render('auth/login', {
+        title: 'Sign In',
+        errors: [{ msg: 'Invalid username or password.' }],
         formData: { username },
-        layout: "layouts/auth",
+        layout: 'layouts/auth',
       });
     }
 
-    const isMatch = await user.comparePassword(password);
+    const token = generateToken(user);
 
-    if (!isMatch) {
-      console.log(`[LOGIN FAILED] Wrong password for user: ${username}`);
-      logger.warn(
-        `Failed login attempt | username=${username} | reason=wrong_password`
-      );
-      return res.status(401).render("auth/login", {
-        title: "Sign In",
-        errors: [{ msg: "Invalid username or password." }],
-        formData: { username },
-        layout: "layouts/auth",
-      });
-    }
-
-    // Success
-    req.session.userId = user._id;
-    req.session.username = user.username;
-
-    console.log(
-      `[LOGIN SUCCESS] User logged in: ${username} | Session ID: ${req.session.id}`
-    );
+    // Set JWT in httpOnly cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
 
     logger.info(`User logged in | username=${user.username} | id=${user._id}`);
-    req.flash("success", `Welcome back, ${user.username}!`);
-
-    res.redirect("/tasks");
+    req.flash('success', `Welcome back, ${user.username}!`);
+    res.redirect('/tasks');
   } catch (error) {
-    console.error("[LOGIN ERROR]", error);
-    logger.error("Login error", {
-      error: error.message,
-      username: req.body.username,
-    });
     next(error);
   }
 };
