@@ -12,6 +12,13 @@ const start = async () => {
       logger.info(`Server running | port=${PORT} | env=${process.env.NODE_ENV || 'development'}`);
     });
 
+    // Initialize WebSocket
+    const { initWebSocket } = require('./utils/notifications');
+    initWebSocket(server);
+
+    // Start overdue checker (every 5 minutes)
+    require('./utils/overdueChecker');
+
     process.on('SIGTERM', () => {
       logger.info('SIGTERM received. Shutting down gracefully...');
       server.close(() => {
