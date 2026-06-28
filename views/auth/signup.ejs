@@ -23,6 +23,10 @@
     <small>Letters, numbers, and underscores only (3–30 chars)</small>
   </div>
   <div class="form-group">
+  <label for="email">Email</label>
+  <input type="email" id="email" name="email" value="<%= formData.email || '' %>" required>
+  </div>
+  <div class="form-group">
     <label for="password">Password</label>
     <input
       type="password"
