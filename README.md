@@ -1,15 +1,17 @@
 # ✦ Taskly — Todo Application
 
-A full-stack Todo application built with Node.js, Express, EJS, and MongoDB. Users can sign up, log in, create tasks, and track their status (all/pending/completed).
+A full-stack Todo application built with Node.js, Express, EJS, and MongoDB. Users can sign up, log in, create tasks with due dates, and track their status (all,pending,completed or overdue).
 
 ---
 
 ## Features
 
-- **Authentication** — Signup and login with username/password (bcrypt-hashed)
-- **Session-based auth** — Persistent sessions via express-session + MongoDB store
-- **Task management** — Create, complete, and soft-delete tasks
-- **Filtering** — Sort tasks by pending or completed status
+- **Authentication** — Signup and login with username/password + JWT tokens
+- **Task management** — Create tasks with due dates, complete, and soft-delete tasks
+- **Overdue System** — Automatic overdue status when due date passes
+- **Real-time Notifications** — WebSocket notifications for overdue & completed tasks
+- **Email Notifications** — Email alerts for important task events
+- **Filtering** — Sort tasks by  by All, Pending, Overdue, Completed
 - **Server-side rendering** — EJS templates with express-ejs-layouts
 - **Global error handling** — Centralized error handler with local validation
 - **Structured logging** — Winston with timestamp-formatted logs
@@ -25,11 +27,12 @@ USER                    TASK
 _id (PK)     ───┐       _id (PK)
 username         └───── user (FK)
 password                title
-createdAt               description
-updatedAt               status (pending|completed|deleted)
-                        completedAt
+email                   description
+createdAt               status (pending|completed|deleted|overdue)
+updatedAt               completedAt
                         createdAt
                         updatedAt
+                        
 
 Relationship: One USER owns zero or many TASKs (1..*)
 ```
@@ -56,8 +59,12 @@ todo-app/
 │   │   ├── auth.js
 │   │   └── tasks.js
 │   └── utils/
-│       ├── db.js            # MongoDB connection
-│       └── logger.js        # Winston logger
+│       ├── db.js                # MongoDB connection
+│       └── logger.js            # Winston logger
+│       └──jwt.js            
+│       └── notifications.js     # WebSocket + Email
+│       └──overdueChecker.js    # Background job       
+│       
 ├── views/
 │   ├── layouts/
 │   │   ├── main.ejs         # Authenticated layout
@@ -91,6 +98,7 @@ todo-app/
 
 - Node.js 18+
 - MongoDB (local or MongoDB Atlas)
+- Gmail account (for email notifications) or any SMTP service
 
 ### Installation
 
