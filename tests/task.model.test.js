@@ -66,3 +66,42 @@ describe('Task status transition logic', () => {
     expect(updated.completedAt).toBeNull();
   });
 });
+
+
+describe('Due Date & Overdue Logic', () => {
+  test('should set overdue status if dueDate is in the past', () => {
+    const pastDate = new Date(Date.now() - 86400000);
+    const task = new Task({
+      title: 'Test Task',
+      user: '507f1f77bcf86cd799439011',
+      dueDate: pastDate,
+      status: 'pending'
+    });
+
+    task.validateSync();
+    expect(task.status).toBe('overdue');
+  });
+
+  test('should not change status if dueDate is in future', () => {
+    const futureDate = new Date(Date.now() + 86400000); // tomorrow
+    const task = new Task({
+      title: 'Future Task',
+      user: '507f1f77bcf86cd799439011',
+      dueDate: futureDate,
+      status: 'pending'
+    });
+
+    task.validateSync();
+    expect(task.status).toBe('pending');
+  });
+
+  test('should allow manual overdue status', () => {
+    const task = new Task({
+      title: 'Manual Overdue',
+      user: '507f1f77bcf86cd799439011',
+      status: 'overdue'
+    });
+
+    expect(task.status).toBe('overdue');
+  });
+});
