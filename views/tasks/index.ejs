@@ -23,6 +23,10 @@
         <label for="description">Description <span class="optional">(optional)</span></label>
         <textarea id="description" name="description" placeholder="Add more details..." maxlength="1000" rows="2"></textarea>
       </div>
+      <div class="form-group">
+        <label for="dueDate">Due Date (optional)</label>
+        <input type="datetime-local" id="dueDate" name="dueDate">
+      </div>
       <div class="form-actions">
         <button type="submit" class="btn btn-primary">Add Task</button>
         <button type="button" class="btn btn-ghost" onclick="toggleForm()">Cancel</button>
@@ -34,6 +38,7 @@
   <div class="filter-tabs">
     <a href="/tasks?filter=all" class="tab <%= filter === 'all' ? 'active' : '' %>">All</a>
     <a href="/tasks?filter=pending" class="tab <%= filter === 'pending' ? 'active' : '' %>">Pending</a>
+    <a href="/tasks?filter=overdue" class="tab <%= filter === 'overdue' ? 'active' : '' %>">Overdue</a>
     <a href="/tasks?filter=completed" class="tab <%= filter === 'completed' ? 'active' : '' %>">Completed</a>
   </div>
 
@@ -42,10 +47,12 @@
     <% if (tasks.length === 0) { %>
       <div class="empty-state">
         <div class="empty-icon">
-          <% if (filter === 'completed') { %>☐<% } else { %>✦<% } %>
+          <% if (filter === 'completed') { %>☐<% } else if (filter === 'overdue') { %>⚠<% } else { %>✦<% } %>
         </div>
         <p class="empty-title">
-          <% if (filter === 'pending') { %>No pending tasks — you're all caught up!</% } else if (filter === 'completed') { %>No completed tasks yet.<% } else { %>No tasks yet. Create your first one!<% } %>
+          <% if (filter === 'pending') { %>No pending tasks — you're all caught up!</% }
+           else if (filter === 'overdue') { %>No overdue tasks.<% }
+           else if (filter === 'completed') { %>No completed tasks yet.<% }  else { %>No tasks yet. Create your first one!<% } %>
         </p>
       </div>
     <% } else { %>
@@ -53,7 +60,7 @@
         <div class="task-card <%= task.status %>">
           <div class="task-main">
             <div class="task-checkbox">
-              <% if (task.status === 'pending') { %>
+              <% if (task.status === 'pending' || task.status === 'overdue') { %>
                 <form action="/tasks/<%= task._id %>/status" method="POST">
                   <input type="hidden" name="status" value="completed">
                   <button type="submit" class="check-btn" title="Mark as complete">○</button>
@@ -77,11 +84,19 @@
                 <span class="task-date">
                   <%= new Date(task.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
                 </span>
+
+                 <% if (task.dueDate) { %>
+                  <span class="task-date">
+                    Due: <%= new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+                  </span>
+                <% } %>
+
                 <% if (task.status === 'completed' && task.completedAt) { %>
                   <span class="task-completed-at">
                     · Completed <%= new Date(task.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
                   </span>
                 <% } %>
+
                 <span class="status-pill status-<%= task.status %>"><%= task.status %></span>
               </div>
             </div>
@@ -107,7 +122,4 @@ function toggleForm() {
     setTimeout(() => document.getElementById('title').focus(), 50);
   }
 }
-
-// Auto-show form if there was a validation error
-<% if (locals.showForm) { %>toggleForm();<% } %>
 </script>
