@@ -15,6 +15,10 @@ const taskValidation = [
     .optional()
     .isLength({ max: 1000 })
     .withMessage('Description cannot exceed 1000 characters.'),
+  body('dueDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Due date must be a valid date.'),
 ];
 
 router.use(isAuthenticated);
