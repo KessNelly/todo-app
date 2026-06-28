@@ -3,6 +3,8 @@ const { validationResult } = require("express-validator");
 const Task = require("../models/Task");
 const { TASK_STATUSES } = require("../models/Task");
 const logger = require("../utils/logger");
+const cron = require('node-cron');
+const { sendTaskNotification } = require('../utils/notifications');
 
 // GET /tasks
 const getTasks = async (req, res, next) => {
@@ -12,8 +14,10 @@ const getTasks = async (req, res, next) => {
 
     const query = { user: userId, status: { $ne: TASK_STATUSES.DELETED } };
 
-    if (filter === "pending") query.status = TASK_STATUSES.PENDING;
+    if (filter === 'pending') query.status = { $in: [TASK_STATUSES.PENDING, TASK_STATUSES.OVERDUE] };
+
     else if (filter === "completed") query.status = TASK_STATUSES.COMPLETED;
+    else if (filter === 'overdue') query.status = TASK_STATUSES.OVERDUE;
 
     const tasks = await Task.find(query).sort({ createdAt: -1 });
 
@@ -26,7 +30,7 @@ const getTasks = async (req, res, next) => {
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
-    const taskCounts = { pending: 0, completed: 0, deleted: 0 };
+    const taskCounts = { pending: 0, completed: 0, deleted: 0, overdue: 0 };
     counts.forEach(({ _id, count }) => {
       taskCounts[_id] = count;
     });
@@ -56,10 +60,11 @@ const createTask = async (req, res, next) => {
       return res.redirect("/tasks");
     }
 
-    const { title, description } = req.body;
+    const { title, description, dueDate } = req.body;
     const task = await Task.create({
       title: title.trim(),
       description: description ? description.trim() : "",
+      dueDate: dueDate ? new Date(dueDate) : null,
       user: req.session.userId,
     });
 
@@ -94,6 +99,11 @@ const updateTaskStatus = async (req, res, next) => {
     const prevStatus = task.status;
     task.status = status;
     await task.save();
+
+    // Send notification if completed
+    if (status === TASK_STATUSES.COMPLETED) {
+      await sendTaskNotification(task.user, 'completed', task);
+    }
 
     logger.info(
       `Task status updated | user=${req.session.username} | taskId=${id} | ${prevStatus}->${status}`
